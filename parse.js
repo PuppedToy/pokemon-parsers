@@ -32,6 +32,16 @@ function translate(moveName) {
 }
 
 const file = String(readFileSync(fileName));
+const setupRegex = /<p>Randomization of <strong>(.*?)<\/strong>/;
+const categoryMoveGames = ['diamond', 'pearl', 'platinum', 'heartgold', 'soulsilver', 'white', 'black'];
+const setupResult = setupRegex.exec(file);
+let withCategory = false;
+if (setupResult) {
+    const [ _, gameTypeResult ] = setupResult;
+    const gameType = gameTypeResult.toLowerCase();
+    withCategory = categoryMoveGames.some(category => gameType.includes(category));
+}
+
 const lines = file.split('\n');
 
 const states = {
@@ -80,7 +90,6 @@ const lookups = [
 
 const pokeList = [];
 const moveList = [];
-const tradeList = [];
 
 let state = states.LOOKUP;
 
@@ -105,7 +114,7 @@ const evoList = [];
 /* Pokemon Stats */
 const nameRegex = /<td class="left">(.*?)<\/td>/;
 const typeRegex = /<span class="pk-type.*?">(.*?)<\/span>/;
-const statRegex = /<td>([0-9]+?)<\/td>/;
+const statRegex = /<td>(.+?)<\/td>/;
 const statsEndRegex = /Removing Trade Evolutions<\/h2>/;
 const pokeStatOrder = ['hp', 'atk', 'def', 'spe', 'spa', 'spd'];
 let name;
@@ -116,6 +125,9 @@ let stats = {};
 /* Moves */
 const movesEndRegex = /Pokemon Movesets<\/h2>/;
 const moveStatOrder = ['basePower', 'accuracy', 'pp'];
+if (withCategory) {
+    moveStatOrder.push('category');
+}
 
 /* Trades */
 let tradeTable;
@@ -230,8 +242,13 @@ lines.forEach((untrimmedLine, count) => {
             const list = state === states.STAT_STATS ? pokeList : moveList;
             if (resultStatsRegex) {
                 const [ _, stat ] = resultStatsRegex;
-                const parsedStat = parseInt(stat, 10);
                 const currentStatName = statOrder[currentStat++];
+                let parsedStat;
+                if (currentStatName !== 'category') {
+                    parsedStat = parseInt(stat, 10);
+                } else {
+                    parsedStat = firstLetterCase(stat);
+                }
                 stats[currentStatName] = parsedStat;
                 if (currentStat >= statOrder.length) {
                     list.push({
@@ -277,19 +294,20 @@ lines.forEach((untrimmedLine, count) => {
 const pokeTs = `export const Pokedex: {[k: string]: ModdedSpeciesData} = {
     ${pokeList.map(({id, types, hp, atk, def, spa, spd, spe }) => `${id}: {
         inherit: true,
-        types: ${types.map(type => firstLetterCase(type))},
+        types: [${types.map(type => `"${firstLetterCase(type)}"`).join(', ')}],
         baseStats: {hp: ${hp}, atk: ${atk}, def: ${def}, spa: ${spa}, spd: ${spd}, spe: ${spe}}
     }`).join(`,
     `)}
 };`;
 
 const movesTs = `export const Moves: {[k: string]: ModdedMoveData} = {
-    ${moveList.map(({id, types, basePower, pp, accuracy }) => `${id}: {
+    ${moveList.map(({id, types, basePower, pp, accuracy, category }) => `${id}: {
         inherit: true,
-        type: ${types},
+        type: "${firstLetterCase(types)}",
         basePower: ${basePower},
         pp: ${pp},
-        accuracy: ${accuracy},
+        accuracy: ${accuracy},${category ? `
+        category: "${category}",` : ''}
     }`).join(`,
     `)}
 };`;
