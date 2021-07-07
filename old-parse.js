@@ -1,6 +1,6 @@
 const { readFileSync, writeFileSync } = require('fs');
 
-const file = String(readFileSync(`${__dirname}/Torneo.gba.log`));
+const file = String(readFileSync(`${__dirname}/TorneoNew.gba.log`));
 
 const pokeList = [];
 // 1|Bulbasaur |GRASS/POISON     |  59|  57|  36|  79|  19|  69|FORECAST    |LIQUID OOZE |LUM BERRY (rare)
@@ -70,5 +70,5 @@ const moves = `export const Moves: {[k: string]: ModdedMoveData} = {
     `)}
 };`;
 
-writeFileSync(`${__dirname}/pokedex-${String(new Date())}.ts`, poke);
-writeFileSync(`${__dirname}/moves-${String(new Date())}.ts`, moves);
+writeFileSync(`${__dirname}\\pokedex.ts`, poke);
+writeFileSync(`${__dirname}\\moves.ts`, moves);
