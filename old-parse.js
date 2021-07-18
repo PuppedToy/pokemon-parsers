@@ -1,6 +1,17 @@
 const { readFileSync, writeFileSync } = require('fs');
 
 const file = String(readFileSync(`${__dirname}/TorneoNew.gba.log`));
+const translations = JSON.parse(String(readFileSync(`${__dirname}/translations.json`)));
+function translate(moveName) {
+    const parsedName = moveName.toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    if (Object.hasOwnProperty.call(translations, parsedName)) {
+        return translations[parsedName];
+    }
+    else {
+        return moveName;
+    }
+}
 
 const pokeList = [];
 // 1|Bulbasaur |GRASS/POISON     |  59|  57|  36|  79|  19|  69|FORECAST    |LIQUID OOZE |LUM BERRY (rare)
@@ -42,8 +53,9 @@ file.split('\n').forEach(line => {
         else if (currentDataType === 'moves') {
             const data = line.split('|');
             const [ _1, name, type, basePower, accuracy, pp ] = data;
+            const translatedName = translate(name);
             moveList.push({
-                id: name.trim().toLowerCase().replace(/[^a-z]/g, ''),
+                id: translatedName.trim().toLowerCase().replace(/[^a-z0-9]/g, ''),
                 basePower: parseStat(basePower),
                 pp: parseStat(pp),
                 accuracy: parseStat(accuracy)

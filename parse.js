@@ -306,7 +306,7 @@ const movesTs = `export const Moves: {[k: string]: ModdedMoveData} = {
         type: "${firstLetterCase(types)}",
         basePower: ${basePower},
         pp: ${pp},
-        accuracy: ${accuracy},${category ? `
+        accuracy: ${accuracy || true},${category ? `
         category: "${category}",` : ''}
     }`).join(`,
     `)}
